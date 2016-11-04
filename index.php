@@ -19,7 +19,7 @@ define('APP_DEBUG', True);
 
 define('CSS_URL', '/myoa/Public/style/home/');
 define('JS_URL', '/myoa/Public/js/');
-define('IMAGE_URL', '/myoa/Public/image/');
+define('IMAGE_URL', '/myoa/Public/image/home/');
 
 /* '__APP__',__ROOT__.'/index.php',					// 更改默认的__APP__ 替换规则
  '__JS__' => __ROOT__.'/Public/js',

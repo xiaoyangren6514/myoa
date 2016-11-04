@@ -48,7 +48,7 @@
                     data: 'username=' + username + '&password=' + password + '&code=' + code,
                     success: function (data) {
                         if (data.s == 'ok') {
-                            wintq('登录成功', 1, 2000, 0, '__APP__/Index/main/');
+                            wintq('登录成功', 1, 2000, 0, '<<$smarty.const.__CONTROLLER__>>/main/');
                         } else {
                             rcode($('#verify'));
                             wintq(data.s, 3, 2000, 1, '');

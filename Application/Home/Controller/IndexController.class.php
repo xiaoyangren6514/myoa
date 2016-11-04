@@ -1,8 +1,10 @@
 <?php
 namespace Home\Controller;
 
+use Home\Model\UserModel;
 use Org\Net\IpLocation;
 use Think\Controller;
+use Think\Log;
 use Think\Verify;
 
 class IndexController extends Controller
@@ -67,28 +69,34 @@ class IndexController extends Controller
                     }
                 }
             }
-            $where['Username'] = $username;
-            $user = M('user');
-            if ($re = $user->where($where)->count()) {
-                $where['Status'] = 0;
-                if (!$user->where($where)->count()) {
+            $user = new UserModel();
+            $re = $user->checkUserNameExist($username);
+            if ($re) {
+                $re = $user->checkUserStatus($username, 0);
+                if (!$re) {
                     $this->loginlog($re['ID'], $username, '<div class="de2">违规帐号登录</div>', $area['country'] . '.' . $area['area'], $area['ip']);
                     $data['s'] = '当前帐号已被封禁，请等待解除～！';
                     $this->ajaxReturn($data);
                 }
                 $where['Password'] = sha1(md5($password));
-                if (!$result = $user->where($where)->getField('ID,Username,Password,Roleid,Status,Competence,Loginarea,Logincount')) {
+                $result = $user->doLogin($username, sha1(md5($password)));
+                if (empty($result)) {
                     $this->loginlog($re['ID'], $username, '<div class="de2">登录密码错误</div>', $area['country'] . '.' . $area['area'], $area['ip']);
                     $data['s'] = '登录密码错误';
                     $this->ajaxReturn($data);
                 }
                 //将二维数组转为一维数组
+
                 foreach ($result as $key => $val) {
                     $arr = $val;
                 }
                 //IP地址位置获取
                 $loginlog['Loginarea'] = $area['country'] . '.' . $area['area'];
-                $loginlog['Loginip'] = $area['ip'];
+                $ip = $area['ip'];
+                if (empty($ip)) {
+                    $ip = '';
+                }
+                $loginlog['Loginip'] = $ip;
                 $loginlog['Logintime'] = date('Y-m-d H:i:s');
                 $er = $user->where('ID = ' . $arr['ID'])->setField($loginlog);
                 $user->where('ID = ' . $arr['ID'])->setInc('Logincount');    //登录次数加1
@@ -101,10 +109,10 @@ class IndexController extends Controller
                 $_SESSION['ThinkUser'] = $arr;
                 //销毁验证码session
                 session('verify', null);
-                R('Public/errjson', array('ok'));
+                $data['s'] = 'ok';
+                $this->ajaxReturn($data);
             } else {
                 $this->loginlog(0, $username, '<div class="de2">用户不存在</div>', $area['country'] . '.' . $area['area'], $area['ip']);
-                R('Public/errjson', array('用户名不存在'));
                 $data['s'] = '用户名不存在';
                 $this->ajaxReturn($data);
             }
@@ -122,6 +130,46 @@ class IndexController extends Controller
         $Ip = new IpLocation('UTFWry.dat');            // 实例化类 参数表示IP地址库文件
         $area = $Ip->getlocation();                    // 获取某个IP地址所在的位
         return $area;
+    }
+
+    /**
+     * 记录登录日志
+     * @param $uid
+     * @param $username
+     * @param $description
+     * @param $area
+     * @param $cip
+     */
+    public function loginlog($uid, $username, $description, $area, $cip)
+    {
+        //登录日志记录
+        $hlog['Uid'] = $uid;
+        $hlog['User'] = $username;
+        $hlog['Description'] = $description;
+        $hlog['Area'] = $area;
+        $hlog['Loginip'] = $cip;
+        $hlog['Dtime'] = date('Y-m-d H:i:s');
+        $log = M('loginlog');
+        $log->add($hlog);
+    }
+
+    //管理界面
+    public function main()
+    {
+        A('Common');
+        $this->session = $_SESSION['ThinkUser'];
+        //===模块导航开始===
+        if (!S('list')) {
+            $module = M('module');
+            $list = $module->where('Sid = 0')->order('Msort asc')->select();
+            $volist = $module->where('Sid > 0')->order('Msort asc')->select();
+            S('list', $list, $configcache['DataCache'] * 3600);
+            S('volist', $volist, $configcache['DataCache'] * 3600);
+        }
+        $this->assign('list', S('list'));
+        $this->assign('volist', S('volist'));
+        //===模块导航结束===
+        $this->display();
     }
 
 }

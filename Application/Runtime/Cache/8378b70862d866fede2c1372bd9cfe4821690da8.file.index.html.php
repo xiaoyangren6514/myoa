@@ -1,4 +1,4 @@
-<?php /* Smarty version Smarty-3.1.6, created on 2016-11-04 19:13:00
+<?php /* Smarty version Smarty-3.1.6, created on 2016-11-04 19:32:31
          compiled from "./Application/Home/View\Index\index.html" */ ?>
 <?php /*%%SmartyHeaderCode:13736581c461bb969b3-74720118%%*/if(!defined('SMARTY_DIR')) exit('no direct access allowed');
 $_valid = $_smarty_tpl->decodeProperties(array (
@@ -7,7 +7,7 @@ $_valid = $_smarty_tpl->decodeProperties(array (
     '8378b70862d866fede2c1372bd9cfe4821690da8' => 
     array (
       0 => './Application/Home/View\\Index\\index.html',
-      1 => 1478257979,
+      1 => 1478259024,
       2 => 'file',
     ),
   ),
@@ -75,7 +75,8 @@ winpop.js"></script>
                     data: 'username=' + username + '&password=' + password + '&code=' + code,
                     success: function (data) {
                         if (data.s == 'ok') {
-                            wintq('登录成功', 1, 2000, 0, '__APP__/Index/main/');
+                            wintq('登录成功', 1, 2000, 0, '<?php echo @__CONTROLLER__;?>
+/main/');
                         } else {
                             rcode($('#verify'));
                             wintq(data.s, 3, 2000, 1, '');
